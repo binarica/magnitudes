@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      table,
+      td,
+      th {
+        border: 1px solid black;
+      }
+
+      table {
+        border-collapse: collapse;
+      }
+
+      td {
+        text-align: center;
+        width: 70px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>TPR 5.A</h2>
+    <h3>Integrador sobre datos numéricos que son magnitudes.</h3>
+
+    Nombre y apellido: <input type="text" id="nombre" /><br />
+    DNI:
+    <input
+      type="text"
+      id="dni"
+      maxlength="8"
+      value="12345678"
+      onchange="sustituir()"
+    />
+    <p id="titulo"></p>
+
+    <ol type="1">
+      <li>
+        <br />
+        <table id="punto1"></table>
+        <br />
+      </li>
+      <li>
+        <br />
+        <ol type="a">
+          <li>
+            <br />
+            <table id="punto2a"></table>
+            <br />
+          </li>
+          <li>
+            <p id="punto2b"></p>
+          </li>
+          <li>
+            <br />
+            <table id="punto2c"></table>
+            <br />
+          </li>
+          <li>
+            <br />
+            <table id="punto2d"></table>
+            <br />
+          </li>
+        </ol>
+      </li>
+      <li>
+        <p id="punto3"></p>
+      </li>
+      <li>
+        <br />
+        <table id="punto4"></table>
+        <br />
+      </li>
+      <li>
+        <br />
+        <table id="punto5"></table>
+        <br />
+      </li>
+    </ol>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", sustituir);
+
+      function sustituir() {
+        const miNombre = document.querySelector("#nombre").value.split(" ")[0];
+        const dni = document.querySelector("#dni").value;
+        const P = dni.substring(0, 3);
+        const Q = dni.substring(3, 6);
+        const T = dni.substring(6, 8);
+
+        const magnitudes = `MAGNITUDES\nR=P+Q-T\nP=${P} Q=${Q} T=${T}`;
+
+        document.querySelector("#titulo").innerHTML = magnitudes.replaceAll(
+          "\n",
+          "<br>"
+        );
+
+        // punto 1
+        let primeraDireccion = 0x100;
+        document.querySelector("#punto1").innerHTML = magnitudes
+          .split("")
+          .map(
+            (char) =>
+              `<tr><td>${decimalToHex(
+                primeraDireccion++
+              )}</td><td>${decimalToHex(
+                char.charCodeAt(0),
+                2
+              )}</td><td>${char
+                .replace("\n", "↵")
+                .replace(" ", "SP")}</td></tr>`
+          )
+          .join("");
+
+        // punto 2a
+        const primeras4cifras = parseInt("0x" + dni.substring(0, 4));
+        primeraDireccion = primeras4cifras;
+
+        const nombres = ["R", "P", "Q", "T"];
+        const direcciones = {};
+        for (let i = 0; i < nombres.length; i++) {
+          const aux = [];
+          for (let j = 0; j < 2; j++) {
+            aux.push(decimalToHex(primeraDireccion, 2));
+            primeraDireccion++;
+          }
+
+          direcciones[nombres[i]] = aux;
+        }
+
+        document.querySelector("#punto2a").innerHTML = `
+		<tr>
+			<td>${direcciones["R"][0]}</td>
+			<td></td>
+			<td rowspan=2>R</td>
+		</tr>
+		<tr>
+			<td>${direcciones["R"][1]}</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>${direcciones["P"][0]}</td>
+			<td>XX</td>
+			<td rowspan=2>P</td>
+		</tr>
+		<tr>
+			<td>${direcciones["P"][1]}</td>
+			<td>XX</td>
+		</tr>
+		<tr>
+			<td>${direcciones["Q"][0]}</td>
+			<td>YY</td>
+			<td rowspan=2>Q</td>
+		</tr>
+		<tr>
+			<td>${direcciones["Q"][1]}</td>
+			<td>YY</td>
+		</tr>
+		<tr>
+			<td>${direcciones["T"][0]}</td>
+			<td>ZZ</td>
+			<td rowspan=2>T</td>
+		</tr>
+		<tr>
+			<td>${direcciones["T"][1]}</td>
+			<td>ZZ</td>
+		</tr>
+	`;
+
+        // punto 2b
+        const valores = {
+          P: parseInt(P),
+          Q: parseInt(Q),
+          T: parseInt(T),
+        };
+
+        document.querySelector("#punto2b").innerHTML = ["P", "Q", "T"]
+          .map((variable) => {
+            const numeroDecimal = valores[variable];
+            return `<b>${variable}</b> = ${numeroDecimal} (en decimal) = ${decimalToBinary(
+              numeroDecimal
+            )} (en binario) = ${decimalToHex(numeroDecimal)} (en hexa)<br>`;
+          })
+          .join("");
+
+        // punto 2c
+        document.querySelector("#punto2c").innerHTML = `
+		<tr>
+			<td>${direcciones["R"][0]}</td>
+			<td></td>
+			<td rowspan=2>R</td>
+		</tr>
+		<tr>
+			<td>${direcciones["R"][1]}</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>${direcciones["P"][0]}</td>
+			<td>${lsbyte(decimalToHex(valores["P"]))}</td>
+			<td rowspan=2>P</td>
+		</tr>
+		<tr>
+			<td>${direcciones["P"][1]}</td>
+			<td>${msbyte(decimalToHex(valores["P"]))}</td>
+		</tr>
+		<tr>
+			<td>${direcciones["Q"][0]}</td>
+			<td>${lsbyte(decimalToHex(valores["Q"]))}</td>
+			<td rowspan=2>Q</td>
+		</tr>
+		<tr>
+			<td>${direcciones["Q"][1]}</td>
+			<td>${msbyte(decimalToHex(valores["Q"]))}</td>
+		</tr>
+		<tr>
+			<td>${direcciones["T"][0]}</td>
+			<td>${lsbyte(decimalToHex(valores["T"]))}</td>
+			<td rowspan=2>T</td>
+		</tr>
+		<tr>
+			<td>${direcciones["T"][1]}</td>
+			<td>${msbyte(decimalToHex(valores["T"]))}</td>
+		</tr>
+	`;
+
+        // punto 2d
+        const ultimas4cifras = parseInt("0x" + dni.substring(4, 8));
+        primeraDireccion = ultimas4cifras;
+
+        const instrucciones = [
+          "A1",
+          lsbyte(direcciones["P"][0]),
+          msbyte(direcciones["P"][0]),
+          "03",
+          "06",
+          lsbyte(direcciones["Q"][0]),
+          msbyte(direcciones["Q"][0]),
+          "2B",
+          "06",
+          lsbyte(direcciones["T"][0]),
+          msbyte(direcciones["T"][0]),
+          "A3",
+          lsbyte(direcciones["T"][0]),
+          msbyte(direcciones["T"][0]),
+        ];
+
+        document.querySelector("#punto2d").innerHTML = instrucciones
+          .map(
+            (inst) =>
+              `<tr><td>${decimalToHex(
+                primeraDireccion++
+              )}</td><td>${inst}</td></tr>`
+          )
+          .join("");
+
+        // punto 3
+        const I1 = decimalToHex(valores["P"]);
+        const I2 = decimalToHex(valores["P"] + valores["Q"]);
+
+        valores["R"] = valores["P"] + valores["Q"] - valores["T"];
+        const I3 = decimalToHex(valores["R"]);
+        const I4 = I3.toString();
+
+        document.querySelector("#punto3").innerHTML = `
+	Después de ejecutar I<sub>1</sub> resulta AX = ${I1} (en hexa) = P<br>
+	
+	Después de ejecutar I<sub>2</sub> resulta AX = ${I2} (en hexa) = P + Q<br>
+	
+	Después de ejecutar I<sub>3</sub> resulta AX = ${I3} = P + Q – T<br>
+
+	Después de ejecutar I<sub>4</sub> resulta AX = ${I4}<br>
+	`;
+
+        // punto 4
+        document.querySelector("#punto4").innerHTML = `
+		<tr>
+			<td rowspan=2>R</td>
+			<td>${direcciones["R"][0]}</td>
+			<td>${lsbyte(I4)}</td>
+		</tr>
+		<tr>
+			<td>${direcciones["R"][1]}</td>
+			<td>${msbyte(I4)}</td>
+		</tr>
+	`;
+
+        // punto 5
+        const resultado = `R=${valores["R"]}`;
+
+        document.querySelector("#punto5").innerHTML = resultado
+          .split("")
+          .map(
+            (char) =>
+              `<tr><td>${char}</td><td>${decimalToHex(
+                char.charCodeAt(0),
+                2
+              )}</td></tr>`
+          )
+          .join("");
+        ` 
+	
+	`;
+      }
+
+      function decimalToHex(dec, padding) {
+        let hex = dec.toString(16);
+        padding = typeof padding === "undefined" ? 4 : padding;
+
+        while (hex.length < padding) {
+          // agregar ceros a la izquierda de forma que resulte un número de 2 o 4 símbolos
+          hex = "0" + hex;
+        }
+
+        return hex.toUpperCase();
+      }
+
+      function decimalToBinary(dec) {
+        let bin = dec.toString(2);
+
+        while (bin.length < 16) {
+          // agregar ceros a la izquierda hasta completar el formato de 16 bits
+          bin = "0" + bin;
+        }
+
+        return bin.match(/.{1,4}/g).join(" ");
+      }
+
+      const msbyte = (word) => word.substring(0, 2);
+      const lsbyte = (word) => word.substring(2, 4);
+    </script>
+  </body>
+</html>
